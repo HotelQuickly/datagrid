@@ -11,6 +11,7 @@
 namespace Nextras\Datagrid;
 
 use Nette\Application\UI;
+use Nette\Neon\Exception;
 use Nette\Templating\IFileTemplate;
 use Nette\Utils\Html;
 use Nette\Utils\Paginator;
@@ -19,7 +20,7 @@ use Nette\Localization\ITranslator;
 
 
 
-class Datagrid extends UI\Control
+class Datagrid extends UI\Control implements ParentInterface
 {
 	/** @var string */
 	const ORDER_ASC = 'asc';
@@ -44,6 +45,9 @@ class Datagrid extends UI\Control
 
 	/** @var array */
 	protected $columns = array();
+
+    /** @var array  */
+    protected $columnStructure = array();
 
 	/** @var callback */
 	protected $columnGetterCallback;
@@ -99,10 +103,59 @@ class Datagrid extends UI\Control
 		}
 
 		$label = $label ? $this->translate($label) : ucfirst($name);
-		return $this->columns[] = new Column($name, $label, $this);
+        $column = new Column($name, $label, $this);
+        $column->setParent($this);
+
+        $this->columns[] = $column;
+        $this->columnStructure[] = $column;
+        return $this;
 	}
 
+    public function getColumnStructure()
+    {
+        return $this->columnStructure;
+    }
 
+    public function columnStructureIndex($name)
+    {
+        foreach ($this->columnStructure as $key => $column) {
+            if ($column->getName() == $name) {
+                return $key;
+            }
+        }
+    }
+
+    public function removeColumnStructure($name)
+    {
+        foreach ($this->columnStructure as $key => $column) {
+            if ($column->getName() == $name) {
+                unset($this->columnStructure[$key]);
+                return $column;
+            }
+        }
+    }
+
+    public function groupColumn($name, $label, array $children)
+    {
+        if (empty($children)) {
+            throw new Exception('Children is empty.');
+        }
+
+        $firstChild = array_shift($children);
+        $index = $this->columnStructureIndex($firstChild);
+
+        $columnGroup = new ColumnGroup($name, $label, $this);
+        $columnGroup->setParent($this);
+        $this->columnStructure[$index]->setParent($columnGroup);
+        $columnGroup->addColumn($this->columnStructure[$index]);
+        $this->columnStructure[$index] = $columnGroup;
+
+        foreach ($children as $child) {
+            $column = $this->removeColumnStructure($child);
+            $column->setParent($columnGroup);
+            $columnGroup->addColumn($column);
+        }
+    }
 
 	public function setRowPrimaryKey($columnName)
 	{
@@ -251,7 +304,24 @@ class Datagrid extends UI\Control
 
 	/*******************************************************************************/
 
+    public function buildColumnHeader()
+    {
+        $columnRows = array(
+            array()
+        );
 
+        $x = $this->columnStructure;
+        foreach ($this->columnStructure as $column) {
+            $columnRows[0][] = $column;
+
+            if ($column instanceof ParentInterface) {
+                $column->buildColumnHeader($columnRows, 1);
+            }
+        }
+
+        ksort($columnRows);
+        return $columnRows;
+    }
 
 	public function render()
 	{
@@ -260,11 +330,11 @@ class Datagrid extends UI\Control
 		}
 
 		$this->template->data = $this->getData();
-		$this->template->columns = $this->columns;
+        $this->template->columns = $this->columns;
+		$this->template->columnStructure = $this->buildColumnHeader();
 		$this->template->editRowKey = $this->editRowKey;
 		$this->template->rowPrimaryKey = $this->rowPrimaryKey;
 		$this->template->paginator = $this->paginator;
-
 		foreach ($this->cellsTemplates as &$cellsTemplate) {
 			if ($cellsTemplate instanceof IFileTemplate) {
 				$cellsTemplate = $cellsTemplate->getFile();

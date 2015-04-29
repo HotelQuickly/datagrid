@@ -14,22 +14,14 @@ use Nette;
 
 
 
-class Column extends Nette\Object
+class Column extends ColumnBase implements ColumnInterface
 {
-
-	/** @var string */
-	public $name;
-
-	/** @var string */
-	public $label;
 
 	/** @var string */
 	protected $sort = FALSE;
 
 	/** @var Datagrid */
 	protected $grid;
-
-
 
 	public function __construct($name, $label, Datagrid $grid)
 	{
@@ -38,7 +30,10 @@ class Column extends Nette\Object
 		$this->grid = $grid;
 	}
 
-
+    public function getColspan()
+    {
+        return 1;
+    }
 
 	public function enableSort($default = NULL)
 	{
@@ -54,7 +49,9 @@ class Column extends Nette\Object
 		return $this;
 	}
 
-
+    public function getChildrenDeep() {
+        return 0;
+    }
 
 	public function canSort()
 	{
