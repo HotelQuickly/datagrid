@@ -114,7 +114,7 @@
 					{ifset #cell-$column->name}
 						{include #"cell-{$column->name}" row => $row, cell => $cell, iterator => $iterator}
 					{else}
-						{$cell}
+						{!$cell}
 					{/ifset}
 				</td>
 			{/ifset}
