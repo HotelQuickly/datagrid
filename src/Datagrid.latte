@@ -23,6 +23,7 @@
 {/define}
 
 {define row-head-colums}
+{formContainer filter}
     {foreach $columnStructure as $hrow}
         <tr class="grid-columns">
             {foreach $hrow as $column}
@@ -41,6 +42,13 @@
                     {else}
                         {$column->label}
                     {/if}
+                    {if isset($_form[$column->name])}
+									{ifset #col-filter-{$column->name}}
+										{include #"col-filter-{$column->name}" form => $_form, _form => $_form, column => $column}
+									{else}
+										{include #col-filter form => $_form, _form => $_form, column => $column}
+									{/ifset}
+								{/if}
                 </th>
             {/foreach}
             {if $template->hasActionsColumn}
@@ -48,6 +56,7 @@
             {/if}
         </tr>
     {/foreach}
+{/formContainer}
 {/define}
 
 {define col-filter}
@@ -177,9 +186,6 @@
 {include #table-open-tag}
 	<thead>
 		{include #row-head-colums}
-		{ifset $_form['filter']}
-			{include #row-head-filter}
-		{/ifset}
 	</thead>
 	<tbody>
 		{var $template->form = $_form}
