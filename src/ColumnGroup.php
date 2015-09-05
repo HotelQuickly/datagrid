@@ -26,7 +26,6 @@ class ColumnGroup extends ColumnBase implements ColumnInterface, ParentInterface
     /** @var array */
     protected $columnStructure = array();
 
-
     public function __construct($name, $label, Datagrid $grid)
     {
         $this->name = $name;
@@ -79,6 +78,10 @@ class ColumnGroup extends ColumnBase implements ColumnInterface, ParentInterface
     public function buildColumnHeader(array &$columnRow = null, $level = 0)
     {
         foreach ($this->getColumnStructure() as $column) {
+			if ($this->level !== FALSE) {
+				$level = $this->level;
+			}
+
             if ($column instanceof ParentInterface) {
                 $column->buildColumnHeader($columnRow, $level + 1);
             }

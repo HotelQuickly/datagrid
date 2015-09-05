@@ -96,7 +96,7 @@ class Datagrid extends UI\Control implements ParentInterface
 	 * @param  string
 	 * @return Column
 	 */
-	public function addColumn($name, $label = NULL)
+	public function addColumn($name, $label = NULL, $rowSpan = FALSE)
 	{
 		if (!$this->rowPrimaryKey) {
 			$this->rowPrimaryKey = $name;
@@ -105,9 +105,11 @@ class Datagrid extends UI\Control implements ParentInterface
 		$label = $label ? $this->translate($label) : ucfirst($name);
         $column = new Column($name, $label, $this);
         $column->setParent($this);
+		$column->setRowspan($rowSpan);
 
         $this->columns[] = $column;
         $this->columnStructure[] = $column;
+
         return $this;
 	}
 
@@ -135,7 +137,7 @@ class Datagrid extends UI\Control implements ParentInterface
         }
     }
 
-    public function groupColumn($name, $label, array $children)
+    public function groupColumn($name, $label, array $children, $rowSpan = FALSE, $level = FALSE)
     {
         if (empty($children)) {
             throw new Exception('Children is empty.');
@@ -145,7 +147,11 @@ class Datagrid extends UI\Control implements ParentInterface
         $index = $this->columnStructureIndex($firstChild);
 
         $columnGroup = new ColumnGroup($name, $label, $this);
-        $columnGroup->setParent($this);
+
+		$columnGroup->setParent($this);
+		$columnGroup->setRowspan($rowSpan);
+		$columnGroup->setLevel($level);
+
         $this->columnStructure[$index]->setParent($columnGroup);
         $columnGroup->addColumn($this->columnStructure[$index]);
         $this->columnStructure[$index] = $columnGroup;

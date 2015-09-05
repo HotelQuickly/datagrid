@@ -22,6 +22,15 @@ class ColumnBase extends \Nette\Object {
      */
     protected $parent;
 
+	/**
+	 * @var integer|FALSE
+	 */
+	protected $rowSpan = FALSE;
+
+
+	/**  @var interger */
+	protected $level = FALSE;
+
 
     public function getName()
     {
@@ -32,6 +41,12 @@ class ColumnBase extends \Nette\Object {
     {
         return $this->label;
     }
+
+	public function setLevel ($level)
+	{
+		$this->level = $level;
+		return $this;
+	}
 
     /**
      * @param ParentInterface $parent
@@ -46,8 +61,18 @@ class ColumnBase extends \Nette\Object {
         return $this->parent;
     }
 
+	public function setRowspan($rowspan)
+	{
+		$this->rowSpan = $rowspan;
+		return $this;
+	}
+
     public function getRowspan()
     {
+		if ($this->rowSpan !== FALSE) {
+			return $this->rowSpan;
+		}
+
         $maxDeep = 0;
         foreach ($this->getParent()->getColumnStructure() as $column) {
             if ($this->getName() != $column->getName()) {
